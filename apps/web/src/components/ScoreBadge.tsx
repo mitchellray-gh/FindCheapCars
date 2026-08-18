@@ -8,9 +8,13 @@ interface ScoreBadgeProps {
 
 const tierConfig: Record<string, { bg: string; text: string; label: string }> = {
   'Top Pick': { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Top Pick' },
+  'top_pick': { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Top Pick' },
   'Great Value': { bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Great Value' },
+  'great_value': { bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Great Value' },
   'Worth Considering': { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Worth Considering' },
+  'worth_considering': { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Worth Considering' },
   'Proceed with Caution': { bg: 'bg-slate-500/15', text: 'text-slate-400', label: 'Proceed with Caution' },
+  'proceed_with_caution': { bg: 'bg-slate-500/15', text: 'text-slate-400', label: 'Proceed with Caution' },
 };
 
 function getTier(score: number, tier?: string) {

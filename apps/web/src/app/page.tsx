@@ -32,8 +32,8 @@ function DashboardContent() {
         if (val) params[key] = val;
       });
       const data = await fetchListings(params);
-      setListings(data.listings || data.data || []);
-      setTotal(data.total || data.count || 0);
+      setListings(data.data || []);
+      setTotal(data.total || 0);
     } catch {
       setListings([]);
       setTotal(0);

@@ -3,25 +3,31 @@
 import Link from 'next/link';
 import ScoreBadge from './ScoreBadge';
 
-interface Listing {
+interface ListingRow {
   id: number;
-  year: number;
+  modelYear: number;
   make: string;
   model: string;
   trim?: string;
   price: number;
   mileage?: number;
-  compositeScore: number;
-  tier: string;
-  reliabilityScore: number;
-  valueScore: number;
-  city?: string;
-  state?: string;
-  source?: string;
+  dealerCity?: string;
+  dealerState?: string;
+  imageUrl?: string;
+  listingUrl?: string;
+  bodyStyle?: string;
+  drivetrain?: string;
+  transmission?: string;
+  score?: {
+    compositeScore: number;
+    tier: string;
+    reliabilityScore: number;
+    valueScore: number;
+  } | null;
 }
 
 interface ListingTableProps {
-  listings: Listing[];
+  listings: ListingRow[];
   total: number;
   page: number;
   limit: number;
@@ -54,7 +60,7 @@ function SortIcon({ field, sortBy, sortOrder }: { field: string; sortBy: string;
 function SkeletonRow() {
   return (
     <tr className="border-b border-slate-800/50">
-      {Array.from({ length: 9 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 bg-slate-800 rounded animate-pulse" style={{ width: `${60 + (((i * 7 + 3) * 13) % 40)}%` }} />
         </td>
@@ -62,6 +68,13 @@ function SkeletonRow() {
     </tr>
   );
 }
+
+const tierLabel: Record<string, string> = {
+  top_pick: 'Top Pick',
+  great_value: 'Great Value',
+  worth_considering: 'Worth Considering',
+  proceed_with_caution: 'Proceed with Caution',
+};
 
 export default function ListingTable({
   listings,
@@ -77,29 +90,18 @@ export default function ListingTable({
   const totalPages = Math.ceil(total / limit);
 
   const columns = [
-    { label: 'Vehicle', field: 'year' },
+    { label: 'Vehicle', field: 'modelYear' },
     { label: 'Price', field: 'price' },
     { label: 'Mileage', field: 'mileage' },
     { label: 'Score', field: 'compositeScore' },
     { label: 'Reliability', field: 'reliabilityScore' },
     { label: 'Value', field: 'valueScore' },
-    { label: 'Location', field: 'city' },
-    { label: 'Source', field: 'source' },
+    { label: 'Location', field: 'dealerCity' },
     { label: '', field: '' },
   ];
 
-  const sourceColors: Record<string, string> = {
-    CarGurus: 'bg-blue-500/15 text-blue-400',
-    'Cars.com': 'bg-emerald-500/15 text-emerald-400',
-    AutoTrader: 'bg-purple-500/15 text-purple-400',
-    TrueCar: 'bg-amber-500/15 text-amber-400',
-    Craigslist: 'bg-orange-500/15 text-orange-400',
-    Facebook: 'bg-indigo-500/15 text-indigo-400',
-  };
-
   return (
     <div className="card overflow-hidden">
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -123,7 +125,7 @@ export default function ListingTable({
               Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />)
             ) : listings.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-16 text-center">
+                <td colSpan={8} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <svg className="w-12 h-12 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -134,67 +136,61 @@ export default function ListingTable({
                 </td>
               </tr>
             ) : (
-              listings.map((listing) => (
+              listings.map((row) => (
                 <Link
-                  key={listing.id}
-                  href={`/listing/${listing.id}`}
+                  key={row.id}
+                  href={`/listing/${row.id}`}
                   className="contents"
                 >
                   <tr className="hover:bg-slate-800/40 transition-colors cursor-pointer">
-                    {/* Vehicle */}
                     <td className="px-4 py-3">
-                      <div className="font-medium text-white">
-                        {listing.year} {listing.make} {listing.model}
+                      <div className="flex items-center gap-3">
+                        {row.imageUrl ? (
+                          <img
+                            src={row.imageUrl}
+                            alt={`${row.modelYear} ${row.make} ${row.model}`}
+                            className="w-14 h-10 object-cover rounded bg-slate-800 flex-shrink-0"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-14 h-10 rounded bg-slate-800 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H18.75m-7.5-2.25h7.5M8.25 6.75h7.5" />
+                            </svg>
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium text-white">
+                            {row.modelYear} {row.make} {row.model}
+                          </div>
+                          {row.trim && (
+                            <div className="text-xs text-slate-500 mt-0.5">{row.trim}</div>
+                          )}
+                        </div>
                       </div>
-                      {listing.trim && (
-                        <div className="text-xs text-slate-500 mt-0.5">{listing.trim}</div>
-                      )}
                     </td>
-
-                    {/* Price */}
                     <td className="px-4 py-3 font-mono font-semibold text-emerald-400">
-                      ${listing.price.toLocaleString()}
+                      ${row.price.toLocaleString()}
                     </td>
-
-                    {/* Mileage */}
                     <td className="px-4 py-3 text-slate-300 font-mono">
-                      {listing.mileage != null ? `${listing.mileage.toLocaleString()} mi` : '—'}
+                      {row.mileage != null ? `${row.mileage.toLocaleString()} mi` : '—'}
                     </td>
-
-                    {/* Score */}
                     <td className="px-4 py-3">
-                      <ScoreBadge score={listing.compositeScore} tier={listing.tier} size="sm" />
-                    </td>
-
-                    {/* Reliability */}
-                    <td className="px-4 py-3 text-slate-300">{listing.reliabilityScore ?? '—'}</td>
-
-                    {/* Value */}
-                    <td className="px-4 py-3 text-slate-300">{listing.valueScore ?? '—'}</td>
-
-                    {/* Location */}
-                    <td className="px-4 py-3 text-slate-400 text-xs">
-                      {listing.city && listing.state
-                        ? `${listing.city}, ${listing.state}`
-                        : listing.city || listing.state || '—'}
-                    </td>
-
-                    {/* Source */}
-                    <td className="px-4 py-3">
-                      {listing.source ? (
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sourceColors[listing.source] || 'bg-slate-500/15 text-slate-400'}`}>
-                          {listing.source}
-                        </span>
+                      {row.score ? (
+                        <ScoreBadge score={row.score.compositeScore} tier={tierLabel[row.score.tier] || row.score.tier} size="sm" />
                       ) : (
                         <span className="text-slate-600">—</span>
                       )}
                     </td>
-
-                    {/* View button */}
+                    <td className="px-4 py-3 text-slate-300">{row.score?.reliabilityScore ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-300">{row.score?.valueScore ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">
+                      {row.dealerCity && row.dealerState
+                        ? `${row.dealerCity}, ${row.dealerState}`
+                        : row.dealerCity || row.dealerState || '—'}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className="text-blue-400 text-xs font-medium group-hover:text-blue-300">
-                        View
-                      </span>
+                      <span className="text-blue-400 text-xs font-medium">View</span>
                     </td>
                   </tr>
                 </Link>
@@ -204,7 +200,6 @@ export default function ListingTable({
         </table>
       </div>
 
-      {/* Pagination */}
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-slate-700/50 bg-slate-800/30">
           <span className="text-xs text-slate-500">
@@ -220,23 +215,16 @@ export default function ListingTable({
             </button>
             {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
               let pageNum: number;
-              if (totalPages <= 7) {
-                pageNum = i + 1;
-              } else if (page <= 4) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 3) {
-                pageNum = totalPages - 6 + i;
-              } else {
-                pageNum = page - 3 + i;
-              }
+              if (totalPages <= 7) pageNum = i + 1;
+              else if (page <= 4) pageNum = i + 1;
+              else if (page >= totalPages - 3) pageNum = totalPages - 6 + i;
+              else pageNum = page - 3 + i;
               return (
                 <button
                   key={pageNum}
                   onClick={() => onPageChange(pageNum)}
                   className={`w-8 h-8 text-xs font-medium rounded-lg transition-colors ${
-                    pageNum === page
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:bg-slate-700'
+                    pageNum === page ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-700'
                   }`}
                 >
                   {pageNum}
