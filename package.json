@@ -1,0 +1,22 @@
+{
+  "name": "auto-find",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "db:generate": "cd packages/db && npx drizzle-kit generate",
+    "db:migrate": "cd packages/db && npx drizzle-kit migrate",
+    "db:push": "cd packages/db && npx drizzle-kit push",
+    "db:seed": "cd packages/db && npx tsx src/seed.ts",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0"
+  }
+}
