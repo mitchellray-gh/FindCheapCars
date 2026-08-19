@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.imgix.net' },
     ],
   },
-  serverExternalPackages: ['sql.js'],
+  serverExternalPackages: ['@libsql/client', 'libsql'],
 };
 
 export default nextConfig;

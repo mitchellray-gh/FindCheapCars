@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import StatsBar from '@/components/StatsBar';
 import FilterPanel from '@/components/FilterPanel';
-import ListingTable from '@/components/ListingTable';
+import ListingGrid from '@/components/ListingGrid';
 import ScrapeButton from '@/components/ScrapeButton';
 import { fetchListings } from '@/lib/api';
 
@@ -64,7 +64,12 @@ function DashboardContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-lg font-semibold text-white">Inventory</h1>
+        <div>
+          <h1 className="text-xl font-bold text-white">Browse inventory</h1>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Reliable used cars under $15,000, scored and ranked.
+          </p>
+        </div>
         <ScrapeButton onComplete={loadData} />
       </div>
       <StatsBar />
@@ -96,7 +101,7 @@ function DashboardContent() {
         />
 
         <div className="flex-1 min-w-0">
-          <ListingTable
+          <ListingGrid
             listings={listings}
             total={total}
             page={page}

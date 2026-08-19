@@ -47,7 +47,7 @@ AI-powered used car aggregation platform that scrapes listings from CarGurus, Ca
 
 - **Frontend** — Next.js 15, React 19, Tailwind CSS
 - **Backend** — Next.js API routes (serverless)
-- **Database** — SQLite via sql.js + Drizzle ORM
+- **Database** — libSQL (SQLite) via Drizzle ORM — local file for dev, [Turso](https://turso.tech/) for production
 - **Scraping** — CarGurus JSON API, Playwright for Cars.com/AutoTrader
 - **Deployment** — Vercel-ready (monorepo)
 
@@ -96,7 +96,9 @@ cd apps/web
 npm run seed
 ```
 
-This creates the SQLite database at `./data/autofind.db` with 56 reliability ratings and 3 source configs.
+Schema creation and reference data (reliability ratings + source configs) run
+automatically on first DB access, so this step is optional. For local dev it
+creates a SQLite file at `./data/autofind.db`.
 
 ### Start Development
 
@@ -147,14 +149,27 @@ npm run build
 
 ## Deploy to Vercel
 
-1. Push to GitHub
-2. Go to [vercel.com/new](https://vercel.com/new)
-3. Import the repository
-4. Set **Root Directory** to `apps/web`
-5. Framework: **Next.js** (auto-detected)
-6. Deploy
+The app uses [Turso](https://turso.tech/) (hosted libSQL/SQLite) so data persists
+across serverless invocations — no more cold-start resets.
 
-> **Note:** Vercel uses serverless functions so the SQLite database resets on cold starts. For production, swap the DB client to [Turso](https://turso.tech/) (libsql) or [Neon](https://neon.tech/) (Postgres) by setting a `DATABASE_URL` environment variable.
+1. **Create a free Turso database:**
+   ```bash
+   npm i -g @tursodatabase/cli
+   turso auth signup
+   turso db create autofind
+   turso db show autofind --url        # -> TURSO_DATABASE_URL
+   turso db tokens create autofind     # -> TURSO_AUTH_TOKEN
+   ```
+2. Push to GitHub.
+3. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
+4. Set **Root Directory** to `apps/web` (framework **Next.js** auto-detected).
+5. Add env vars `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` (from step 1).
+6. Deploy, then trigger a scrape from the dashboard's **Scrape listings** button
+   (or `POST /api/scrape`) to populate the database.
+
+> Local dev needs no env vars — it falls back to a SQLite file at
+> `./data/autofind.db`. Set `TURSO_*` locally too if you want to share the
+> hosted database.
 
 ## API Endpoints
 

@@ -4,6 +4,9 @@ import { scrapeLogs } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { runScrapeJob } from '@/lib/db/scrape-service';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 let dbReady = false;
 
 export async function POST(request: NextRequest) {
