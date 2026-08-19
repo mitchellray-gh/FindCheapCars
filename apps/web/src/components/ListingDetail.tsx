@@ -2,6 +2,7 @@
 
 import ScoreBadge from './ScoreBadge';
 import VehicleGraphic from './VehicleGraphic';
+import { rateDrivetrain } from '@/lib/scoring/drivetrain';
 
 interface ScoreBreakdown {
   base?: number;
@@ -80,6 +81,58 @@ function StatItem({ label, value }: { label: string; value?: string | number | n
     <div className="flex flex-col">
       <span className="text-xs text-slate-500 uppercase tracking-wider">{label}</span>
       <span className="text-sm text-slate-200 font-medium mt-0.5">{value ?? '—'}</span>
+    </div>
+  );
+}
+
+function DrivetrainCard({ drivetrain, bodyStyle }: { drivetrain?: string | null; bodyStyle?: string | null }) {
+  const rating = rateDrivetrain(drivetrain, bodyStyle);
+  if (rating.type === 'unknown') return null;
+
+  const metrics: Array<[string, number]> = [
+    ['Winter traction', rating.metrics.winterTraction],
+    ['Fuel economy', rating.metrics.fuelEconomy],
+    ['Upkeep simplicity', rating.metrics.maintenanceSimplicity],
+    ['Reliability', rating.metrics.reliability],
+    ['Performance', rating.metrics.performance],
+  ];
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Drivetrain rating</h3>
+        <span className="text-lg font-bold text-white">{rating.score}<span className="text-xs text-slate-500">/100</span></span>
+      </div>
+      <p className="text-sm font-medium text-blue-400">{rating.label}</p>
+      <p className="text-xs text-slate-400 mt-1">{rating.summary}</p>
+
+      <div className="mt-3 space-y-1.5">
+        {metrics.map(([label, val]) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-400 w-28 flex-shrink-0">{label}</span>
+            <div className="flex-1 flex gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} className={`h-1.5 flex-1 rounded-full ${i < val ? 'bg-blue-500' : 'bg-slate-700'}`} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <p className="text-emerald-400 font-medium mb-1">Pros</p>
+          <ul className="space-y-0.5 text-slate-400">
+            {rating.pros.map((p) => <li key={p}>+ {p}</li>)}
+          </ul>
+        </div>
+        <div>
+          <p className="text-amber-400 font-medium mb-1">Cons</p>
+          <ul className="space-y-0.5 text-slate-400">
+            {rating.cons.map((c) => <li key={c}>− {c}</li>)}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
@@ -233,6 +286,7 @@ export default function ListingDetail({ listing }: ListingDetailProps) {
 
         {/* Right column - Dealer & Carfax */}
         <div className="space-y-6">
+          <DrivetrainCard drivetrain={listing.drivetrain} bodyStyle={listing.bodyStyle} />
           {/* Dealer Info */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Dealer</h3>

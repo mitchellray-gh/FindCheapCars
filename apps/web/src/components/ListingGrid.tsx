@@ -25,6 +25,7 @@ interface ListingRow {
   bodyStyle?: string;
   drivetrain?: string;
   transmission?: string;
+  engine?: string;
   score?: ListingScore | null;
 }
 
@@ -63,76 +64,74 @@ function CarIcon({ className }: { className?: string }) {
   );
 }
 
-function SkeletonCard() {
+function SkeletonRow() {
   return (
-    <div className="card overflow-hidden animate-pulse">
-      <div className="h-44 bg-slate-800" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-slate-800 rounded w-3/4" />
-        <div className="h-6 bg-slate-800 rounded w-1/3" />
-        <div className="h-3 bg-slate-800 rounded w-2/3" />
+    <div className="card flex items-center gap-3 p-2.5 animate-pulse">
+      <div className="h-12 w-16 rounded bg-slate-800 flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3.5 bg-slate-800 rounded w-1/3" />
+        <div className="h-3 bg-slate-800 rounded w-1/2" />
       </div>
+      <div className="h-5 w-16 bg-slate-800 rounded" />
     </div>
   );
 }
 
-function ListingCard({ row }: { row: ListingRow }) {
+function ListingRowItem({ row }: { row: ListingRow }) {
   const router = useRouter();
   const title = `${row.modelYear} ${row.make} ${row.model}`;
+  const specs = [
+    row.mileage != null ? `${row.mileage.toLocaleString()} mi` : null,
+    row.bodyStyle,
+    row.drivetrain,
+    row.transmission,
+    row.engine,
+  ].filter(Boolean);
 
   return (
     <button
       onClick={() => router.push(`/listing/${row.id}`)}
-      className="card group text-left overflow-hidden flex flex-col transition-all duration-200 hover:border-blue-500/60 hover:shadow-blue-500/10 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      className="card group w-full text-left flex items-center gap-3 p-2.5 transition-colors hover:border-blue-500/60 hover:bg-slate-800/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
     >
-      {/* Body-style graphic (tinted by color) */}
-      <div className="relative h-44 overflow-hidden">
-        <VehicleGraphic
-          bodyStyle={row.bodyStyle}
-          color={row.exteriorColor}
-          className="h-full w-full"
-        />
+      {/* Small body-style graphic */}
+      <VehicleGraphic
+        bodyStyle={row.bodyStyle}
+        color={row.exteriorColor}
+        showLabel={false}
+        className="h-12 w-16 rounded flex-shrink-0"
+      />
+
+      {/* Title + specs */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-sm text-white truncate group-hover:text-blue-400 transition-colors">
+            {title}
+          </h3>
+          {row.trim && <span className="text-xs text-slate-500 truncate hidden sm:inline">{row.trim}</span>}
+        </div>
+        <p className="text-xs text-slate-400 truncate mt-0.5">
+          {specs.join(' · ') || '—'}
+        </p>
+        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+          {row.dealerCity && row.dealerState
+            ? `${row.dealerCity}, ${row.dealerState}`
+            : row.dealerCity || row.dealerState || 'Location N/A'}
+        </p>
+      </div>
+
+      {/* Price + score */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <span className="text-lg font-bold text-emerald-400 font-mono">
+          ${row.price.toLocaleString()}
+        </span>
         {row.score && (
-          <div className="absolute top-2 right-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-400 hidden md:inline" title="Reliability / Value">
+              R {row.score.reliabilityScore} · V {row.score.valueScore}
+            </span>
             <ScoreBadge score={row.score.compositeScore} tier={tierLabel[row.score.tier] || row.score.tier} size="sm" />
           </div>
         )}
-      </div>
-
-      {/* Body */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-white leading-tight group-hover:text-blue-400 transition-colors">
-            {title}
-          </h3>
-        </div>
-        {row.trim && <p className="text-xs text-slate-500 mt-0.5 truncate">{row.trim}</p>}
-
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-emerald-400 font-mono">
-            ${row.price.toLocaleString()}
-          </span>
-        </div>
-
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400">
-          <span>{row.mileage != null ? `${row.mileage.toLocaleString()} mi` : '— mi'}</span>
-          {row.bodyStyle && <span>· {row.bodyStyle}</span>}
-          {row.drivetrain && <span>· {row.drivetrain}</span>}
-        </div>
-
-        <div className="mt-auto pt-3 flex items-center justify-between text-xs">
-          <span className="text-slate-500 truncate">
-            {row.dealerCity && row.dealerState
-              ? `${row.dealerCity}, ${row.dealerState}`
-              : row.dealerCity || row.dealerState || 'Location N/A'}
-          </span>
-          {row.score && (
-            <span className="text-slate-400 flex items-center gap-2 flex-shrink-0">
-              <span title="Reliability">R {row.score.reliabilityScore}</span>
-              <span title="Value">V {row.score.valueScore}</span>
-            </span>
-          )}
-        </div>
       </div>
     </button>
   );
@@ -179,10 +178,10 @@ export default function ListingGrid({
         </div>
       </div>
 
-      {/* Grid */}
+      {/* List */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)}
+        <div className="space-y-2">
+          {Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} />)}
         </div>
       ) : listings.length === 0 ? (
         <div className="card p-16 text-center">
@@ -193,8 +192,8 @@ export default function ListingGrid({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {listings.map((row) => <ListingCard key={row.id} row={row} />)}
+        <div className="space-y-2">
+          {listings.map((row) => <ListingRowItem key={row.id} row={row} />)}
         </div>
       )}
 

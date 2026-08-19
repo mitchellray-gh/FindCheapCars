@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "seed": "tsx src/lib/db/seed.ts",
-    "enrich": "tsx src/lib/db/enrich.ts"
+    "enrich": "tsx src/lib/db/enrich.ts",
+    "drivetrains": "tsx src/lib/db/drivetrains.ts"
   },
   "dependencies": {
     "@auto-find/scraping": "*",
