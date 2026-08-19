@@ -1,7 +1,7 @@
 import { getDb, saveDb } from './client';
 import { sources, carListings, carScores, carfaxReports, reliabilityRatings, scrapeLogs } from './schema';
 import { eq, and } from 'drizzle-orm';
-import { CarGurusScraper, CarsComScraper, AutotraderScraper, decodeVin } from '@auto-find/scraping';
+import { CarGurusScraper, CarsComScraper, AutotraderScraper, CarMaxScraper, decodeVin } from '@auto-find/scraping';
 import { computeReliabilityScore } from '../scoring/reliability';
 import { computeValueScore } from '../scoring/value';
 import { computeCompositeScore } from '../scoring/index';
@@ -17,8 +17,23 @@ export async function runScrapeJob(config: {
 }): Promise<{ found: number; new: number; updated: number; scored: number }> {
   const db = getDb();
 
-  const [source] = await db.select().from(sources).where(eq(sources.name, config.source)).limit(1);
-  if (!source) throw new Error(`Unknown source: ${config.source}`);
+  const KNOWN_SOURCE_URLS: Record<string, string> = {
+    cargurus: 'https://www.cargurus.com',
+    'cars.com': 'https://www.cars.com',
+    autotrader: 'https://www.autotrader.com',
+    carmax: 'https://www.carmax.com',
+  };
+
+  let [source] = await db.select().from(sources).where(eq(sources.name, config.source)).limit(1);
+  if (!source) {
+    if (!(config.source in KNOWN_SOURCE_URLS)) throw new Error(`Unknown source: ${config.source}`);
+    await db.insert(sources).values({
+      name: config.source, baseUrl: KNOWN_SOURCE_URLS[config.source],
+      scrapeMethod: 'api', isActive: true, rateLimitMs: 4000,
+    }).onConflictDoNothing();
+    [source] = await db.select().from(sources).where(eq(sources.name, config.source)).limit(1);
+    if (!source) throw new Error(`Unknown source: ${config.source}`);
+  }
 
   const [log] = await db.insert(scrapeLogs).values({
     sourceId: source.id, region: config.zipCode, status: 'running',
@@ -37,6 +52,9 @@ export async function runScrapeJob(config: {
       listings = await scraper.scrape(opts);
     } else if (config.source === 'autotrader') {
       const scraper = new AutotraderScraper();
+      listings = await scraper.scrape(opts);
+    } else if (config.source === 'carmax') {
+      const scraper = new CarMaxScraper();
       listings = await scraper.scrape(opts);
     }
 

@@ -33,3 +33,19 @@ export async function fetchModels(make: string) {
   if (!res.ok) throw new Error('Failed to fetch models');
   return res.json();
 }
+
+export async function triggerScrape(params: {
+  source: string;
+  zipCode: string;
+  maxPages?: number;
+  maxPrice?: number;
+}) {
+  const res = await fetch('/api/scrape', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'Scrape failed');
+  return data;
+}

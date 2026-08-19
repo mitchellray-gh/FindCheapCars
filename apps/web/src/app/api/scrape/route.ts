@@ -16,10 +16,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'source and zipCode are required' }, { status: 400 });
   }
 
-  const ALL_SOURCES = ['cargurus', 'cars.com', 'autotrader'];
+  const ALL_SOURCES = ['cargurus', 'cars.com', 'autotrader', 'carmax'];
 
   if (![...ALL_SOURCES, 'all'].includes(source)) {
-    return NextResponse.json({ error: 'Invalid source. Must be: cargurus, cars.com, autotrader, or all' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid source. Must be: cargurus, cars.com, autotrader, carmax, or all' }, { status: 400 });
   }
 
   try {

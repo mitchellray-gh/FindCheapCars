@@ -132,6 +132,7 @@ const sourceData = [
   { name: 'cars.com', baseUrl: 'https://www.cars.com', scrapeMethod: 'playwright', isActive: true, rateLimitMs: 3000 },
   { name: 'cargurus', baseUrl: 'https://www.cargurus.com', scrapeMethod: 'api', isActive: true, rateLimitMs: 3000 },
   { name: 'autotrader', baseUrl: 'https://www.autotrader.com', scrapeMethod: 'playwright', isActive: true, rateLimitMs: 5000 },
+  { name: 'carmax', baseUrl: 'https://www.carmax.com', scrapeMethod: 'api', isActive: true, rateLimitMs: 4000 },
 ];
 
 const ratings: Array<{ make: string; model: string; yearStart: number; yearEnd: number; baseScore: number; source: string }> = [

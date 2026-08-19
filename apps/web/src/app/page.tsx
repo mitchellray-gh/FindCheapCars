@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import StatsBar from '@/components/StatsBar';
 import FilterPanel from '@/components/FilterPanel';
 import ListingTable from '@/components/ListingTable';
+import ScrapeButton from '@/components/ScrapeButton';
 import { fetchListings } from '@/lib/api';
 
 function DashboardContent() {
@@ -62,6 +63,10 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-lg font-semibold text-white">Inventory</h1>
+        <ScrapeButton onComplete={loadData} />
+      </div>
       <StatsBar />
 
       {/* Mobile filter toggle */}

@@ -1,10 +1,11 @@
 # AutoFind
 
-AI-powered used car aggregation platform that scrapes listings from CarGurus, Cars.com, and AutoTrader, scores them for reliability and value, and presents them in a filterable dashboard — all under $15,000.
+AI-powered used car aggregation platform that scrapes listings from CarGurus, Cars.com, AutoTrader, and CarMax, scores them for reliability and value, and presents them in a filterable dashboard — all under $15,000.
 
 ## Features
 
-- **Multi-source scraping** — Pulls listings from CarGurus (JSON API), Cars.com, and AutoTrader (Playwright)
+- **Multi-source scraping** — Pulls listings from CarGurus (JSON API), Cars.com, AutoTrader, and CarMax (JSON API)
+- **One-click scraping** — Trigger a scrape of any source (or all at once) from the dashboard header
 - **Composite scoring** — Each listing gets a reliability score (60%) and value score (40%) combined into a single rating
 - **NHTSA VIN decoding** — Free VIN lookups for vehicle specs and recall data
 - **Real-time filtering** — Filter by make, model, year, price, mileage, body style, drivetrain, tier, and minimum score
