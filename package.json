@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "turbo build --filter=@auto-find/web",
+    "build:all": "turbo build",
     "db:generate": "cd packages/db && npx drizzle-kit generate",
     "db:migrate": "cd packages/db && npx drizzle-kit migrate",
     "db:push": "cd packages/db && npx drizzle-kit push",
