@@ -6,7 +6,6 @@
   "types": "src/index.ts",
   "dependencies": {
     "playwright": "^1.50.0",
-    "cheerio": "^1.0.0",
     "bottleneck": "^2.19.0",
     "@auto-find/shared": "*"
   },

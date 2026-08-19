@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ScoreBadge from './ScoreBadge';
 
 interface ListingRow {
@@ -87,6 +87,7 @@ export default function ListingTable({
   sortBy,
   sortOrder,
 }: ListingTableProps) {
+  const router = useRouter();
   const totalPages = Math.ceil(total / limit);
 
   const columns = [
@@ -137,12 +138,11 @@ export default function ListingTable({
               </tr>
             ) : (
               listings.map((row) => (
-                <Link
-                  key={row.id}
-                  href={`/listing/${row.id}`}
-                  className="contents"
-                >
-                  <tr className="hover:bg-slate-800/40 transition-colors cursor-pointer">
+                  <tr
+                    key={row.id}
+                    onClick={() => router.push(`/listing/${row.id}`)}
+                    className="hover:bg-slate-800/40 transition-colors cursor-pointer"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {row.imageUrl ? (
@@ -193,7 +193,6 @@ export default function ListingTable({
                       <span className="text-blue-400 text-xs font-medium">View</span>
                     </td>
                   </tr>
-                </Link>
               ))
             )}
           </tbody>

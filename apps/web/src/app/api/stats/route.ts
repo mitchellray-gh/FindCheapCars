@@ -14,7 +14,7 @@ export async function GET() {
 
   const tiers = await db.select({ tier: carScores.tier, count: count() }).from(carScores).groupBy(carScores.tier);
   const tierDistribution: Record<string, number> = { top_pick: 0, great_value: 0, worth_considering: 0, proceed_with_caution: 0 };
-  tiers.forEach(t => { if (t.tier) tierDistribution[t.tier] = t.count; });
+  tiers.forEach((t: { tier: string | null; count: number }) => { if (t.tier) tierDistribution[t.tier] = t.count; });
 
   const topMakesResults = await db.select({
     make: carListings.make, count: count(),

@@ -118,9 +118,12 @@ export async function runScrapeJob(config: {
 
     saveDb();
     return { found: listings.length, new: newCount, updated: updatedCount, scored: scoredCount };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error('[scrape-service] Error:', msg, stack);
     await db.update(scrapeLogs).set({
-      status: 'failed', errorMessage: error.message,
+      status: 'failed', errorMessage: msg,
       durationMs: Date.now() - startTime, completedAt: new Date().toISOString(),
     }).where(eq(scrapeLogs.id, log.id));
     saveDb();

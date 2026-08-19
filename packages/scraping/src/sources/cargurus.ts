@@ -41,6 +41,7 @@ function parseListing(raw: Record<string, unknown>): ScrapedListing | null {
       trim?: string;
       vin?: string;
       pictureData?: { url?: string };
+      originalPictureData?: { url?: string };
       photos?: Array<{ url: string }>;
       daysOnMarket?: number;
       bodyTypeName?: string;
@@ -94,8 +95,8 @@ function parseListing(raw: Record<string, unknown>): ScrapedListing | null {
       dealerCity: listing.sellerCity ?? listing.dealer?.city ?? null,
       dealerState: listing.sellerRegion ?? listing.dealer?.state ?? null,
       dealerZip: listing.sellerPostalCode ?? listing.dealer?.zip ?? null,
-      listingUrl: `https://www.cargurus.com/Cars/l-${externalId}`,
-      imageUrl: listing.pictureData?.url ?? listing.photos?.[0]?.url ?? null,
+      listingUrl: `https://www.cargurus.com/Cars/link/${externalId}`,
+      imageUrl: listing.originalPictureData?.url ?? listing.pictureData?.url ?? listing.photos?.[0]?.url ?? null,
       daysOnMarket: listing.daysOnMarket ?? null,
     };
   } catch {

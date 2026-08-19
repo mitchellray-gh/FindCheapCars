@@ -1,4 +1,3 @@
-import * as cheerio from 'cheerio';
 import type { ScrapedListing, ScraperOptions } from '../types';
 import { withPage, createStealthContext } from '../utils/browser';
 import { getLimiter, randomDelay } from '../utils/throttle';
@@ -25,102 +24,94 @@ function buildUrl(opts: ScraperOptions, page: number): string {
     params.set('year_min', String(opts.minYear));
   }
 
-  if (opts.maxMileage) {
-    params.set('maximum_distance', String(opts.maxMileage));
-  }
-
   return `${BASE_URL}?${params.toString()}`;
 }
 
-function parseListingFromCard($: cheerio.CheerioAPI, card: cheerio.Element): ScrapedListing | null {
-  try {
-    const $card = $(card);
+interface VehicleDetails {
+  id?: string;
+  listingId?: string;
+  vin?: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  modelYear?: number;
+  trim?: string;
+  bodyStyle?: string;
+  mileage?: string | number;
+  price?: string | number;
+  dealerPrice?: string | number;
+  dealerName?: string;
+  dealerCity?: string;
+  dealerState?: string;
+  dealerZip?: string;
+  exteriorColor?: string;
+  interiorColor?: string;
+  transmission?: string;
+  engine?: string;
+  drivetrain?: string;
+  fuelType?: string;
+  mpgCity?: number;
+  mpgHighway?: number;
+  titleStatus?: string;
+  imageUrl?: string;
+  primaryThumbnail?: string;
+  pictureData?: { url?: string };
+  listingUrl?: string;
+  url?: string;
+  slug?: string;
+}
 
-    const linkEl = $card.find('a.inventory-card-main-link, a[href*="/vehicles/"]').first();
-    const href = linkEl.attr('href') ?? '';
-    const listingUrl = href.startsWith('http') ? href : `https://www.cars.com${href}`;
+function toScrapedListing(data: VehicleDetails): ScrapedListing | null {
+  const externalId = String(data.listingId ?? data.id ?? '').trim();
+  if (!externalId) return null;
 
-    const externalIdMatch = listingUrl.match(/\/vehicles?\/(\d+)/);
-    const externalId = externalIdMatch?.[1] ?? null;
-    if (!externalId) return null;
+  const modelYear = data.year ?? data.modelYear ?? 0;
+  const rawPrice = data.price ?? data.dealerPrice ?? 0;
+  const price = typeof rawPrice === 'string' ? parseFloat(rawPrice.replace(/[^0-9.]/g, '')) : Number(rawPrice);
 
-    const titleEl = $card.find('h2, .title, [class*="title"]').first();
-    const rawTitle = titleEl.text().trim();
-    if (!rawTitle) return null;
+  if (!modelYear || !price || price <= 0) return null;
 
-    const yearMatch = rawTitle.match(/^(\d{4})\s+/);
-    const modelYear = yearMatch ? parseInt(yearMatch[1], 10) : 0;
+  const rawMileage = data.mileage;
+  const mileage = typeof rawMileage === 'string'
+    ? parseInt(rawMileage.replace(/[^0-9]/g, ''), 10)
+    : typeof rawMileage === 'number' ? rawMileage : null;
 
-    const priceEl = $card.find('[class*="price"], .primary-price').first();
-    const rawPrice = priceEl.text().replace(/[^0-9.]/g, '');
-    const price = parseFloat(rawPrice) || 0;
+  const imageUrl = data.imageUrl
+    ?? data.primaryThumbnail
+    ?? data.pictureData?.url
+    ?? null;
 
-    if (!modelYear || !price) return null;
+  const listingSlug = data.slug ?? externalId;
+  const listingUrl = `https://www.cars.com/vehicledetail/${listingSlug}/`;
 
-    const mileageEl = $card.find('[class*="mileage"], .mileage').first();
-    const rawMileage = mileageEl.text().replace(/[^0-9]/g, '');
-    const mileage = rawMileage ? parseInt(rawMileage, 10) : null;
-
-    const dealerEl = $card.find('[class*="dealer"], .dealer-name, .dealer-info').first();
-    const dealerName = dealerEl.text().trim() || null;
-
-    const locationEl = $card.find('[class*="location"], .dealer-location, .vehicle-location').first();
-    const locationText = locationEl.text().trim();
-    const locationParts = locationText.split(',').map((s: string) => s.trim());
-    const dealerCity = locationParts[0] ?? null;
-    const dealerState = locationParts.length > 1 ? locationParts[locationParts.length - 1] : null;
-
-    const imgEl = $card.find('img').first();
-    const imageUrl = imgEl.attr('src') ?? imgEl.attr('data-src') ?? null;
-
-    const cleanedTitle = rawTitle
-      .replace(/^\d{4}\s+/, '')
-      .trim();
-
-    const parts = cleanedTitle.split(/\s+/);
-    let make = '';
-    let model = '';
-    let trim = '';
-
-    if (parts.length >= 2) {
-      make = parts[0];
-      model = parts[1];
-      trim = parts.slice(2).join(' ');
-    } else if (parts.length === 1) {
-      make = parts[0];
-    }
-
-    return {
-      source: 'cars_com',
-      externalId,
-      vin: null,
-      make,
-      model,
-      modelYear,
-      trim: trim || null,
-      bodyStyle: null,
-      exteriorColor: null,
-      interiorColor: null,
-      mileage,
-      price,
-      titleStatus: null,
-      transmission: null,
-      engine: null,
-      drivetrain: null,
-      fuelType: null,
-      mpgCity: null,
-      mpgHighway: null,
-      dealerName,
-      dealerCity,
-      dealerState,
-      dealerZip: null,
-      listingUrl,
-      imageUrl,
-      daysOnMarket: null,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    source: 'cars_com',
+    externalId,
+    vin: data.vin ?? null,
+    make: data.make ?? '',
+    model: data.model ?? '',
+    modelYear,
+    trim: data.trim ?? null,
+    bodyStyle: data.bodyStyle ?? null,
+    exteriorColor: data.exteriorColor ?? null,
+    interiorColor: data.interiorColor ?? null,
+    mileage,
+    price,
+    titleStatus: data.titleStatus ?? null,
+    transmission: data.transmission ?? null,
+    engine: data.engine ?? null,
+    drivetrain: data.drivetrain ?? null,
+    fuelType: data.fuelType ?? null,
+    mpgCity: data.mpgCity ?? null,
+    mpgHighway: data.mpgHighway ?? null,
+    dealerName: data.dealerName ?? null,
+    dealerCity: data.dealerCity ?? null,
+    dealerState: data.dealerState ?? null,
+    dealerZip: data.dealerZip ?? null,
+    listingUrl,
+    imageUrl,
+    daysOnMarket: null,
+  };
 }
 
 export class CarsComScraper {
@@ -137,9 +128,7 @@ export class CarsComScraper {
           this.fetchPage(context, opts, page),
         );
 
-        if (listings.length === 0) {
-          break;
-        }
+        if (listings.length === 0) break;
 
         allListings.push(...listings);
 
@@ -164,27 +153,27 @@ export class CarsComScraper {
     return withPage(async (pw) => {
       await pw.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-      await pw.waitForSelector(
-        'div.inventory-card, [data-qa="vehicle-card"], .shop-results-list .vehicle-card, article.vehicle-card',
-        { timeout: 15000 },
-      ).catch(() => {});
-
+      // Cars.com uses <fuse-card> custom elements with a data-vehicle-details JSON attribute
+      await pw.waitForSelector('fuse-card[data-vehicle-details]', { timeout: 15000 }).catch(() => {});
       await pw.waitForTimeout(2000);
 
-      const html = await pw.content();
-      const $ = cheerio.load(html);
+      const results = await pw.evaluate(() => {
+        const cards = document.querySelectorAll('fuse-card[data-vehicle-details]');
+        const listings: VehicleDetails[] = [];
+        cards.forEach((card) => {
+          try {
+            const raw = card.getAttribute('data-vehicle-details');
+            if (raw) {
+              listings.push(JSON.parse(raw));
+            }
+          } catch {}
+        });
+        return listings;
+      });
 
-      const cards = $('div.inventory-card, [data-qa="vehicle-card"], .shop-results-list .vehicle-card, article.vehicle-card').toArray();
-
-      const results: ScrapedListing[] = [];
-      for (const card of cards) {
-        const parsed = parseListingFromCard($, card);
-        if (parsed) {
-          results.push(parsed);
-        }
-      }
-
-      return results;
+      return results
+        .map(toScrapedListing)
+        .filter((l): l is ScrapedListing => l !== null);
     }, () => Promise.resolve(context));
   }
 }

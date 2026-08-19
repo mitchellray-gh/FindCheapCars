@@ -16,21 +16,49 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'source and zipCode are required' }, { status: 400 });
   }
 
-  if (!['cargurus', 'cars.com', 'autotrader'].includes(source)) {
-    return NextResponse.json({ error: 'Invalid source. Must be: cargurus, cars.com, or autotrader' }, { status: 400 });
+  const ALL_SOURCES = ['cargurus', 'cars.com', 'autotrader'];
+
+  if (![...ALL_SOURCES, 'all'].includes(source)) {
+    return NextResponse.json({ error: 'Invalid source. Must be: cargurus, cars.com, autotrader, or all' }, { status: 400 });
   }
 
   try {
-    const result = await runScrapeJob({
-      source,
-      zipCode,
-      maxPages: maxPages || 5,
-      maxPrice: maxPrice || 15000,
-    });
+    const sourcesToRun = source === 'all' ? ALL_SOURCES : [source];
+    const perSource: Record<string, unknown> = {};
+    const totals = { found: 0, new: 0, updated: 0, scored: 0 };
 
-    return NextResponse.json({ status: 'completed', ...result });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    for (const src of sourcesToRun) {
+      try {
+        const result = await runScrapeJob({
+          source: src,
+          zipCode,
+          maxPages: maxPages || 5,
+          maxPrice: maxPrice || 15000,
+        });
+        perSource[src] = result;
+        totals.found += result.found;
+        totals.new += result.new;
+        totals.updated += result.updated;
+        totals.scored += result.scored;
+      } catch (e: unknown) {
+        perSource[src] = { error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+
+    if (source !== 'all') {
+      const only = perSource[source];
+      if (only && typeof only === 'object' && 'error' in only) {
+        throw new Error(String((only as { error: string }).error));
+      }
+      return NextResponse.json({ status: 'completed', ...(only as object) });
+    }
+
+    return NextResponse.json({ status: 'completed', ...totals, perSource });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error('[/api/scrape] Error:', msg, stack);
+    return NextResponse.json({ error: msg, stack }, { status: 500 });
   }
 }
 

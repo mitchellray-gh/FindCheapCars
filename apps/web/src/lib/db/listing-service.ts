@@ -60,7 +60,7 @@ export async function getListings(filters: ListingFilters) {
     .where(whereClause);
 
   const listingsWithScores = await Promise.all(
-    results.map(async (row) => {
+    results.map(async (row: { listing: typeof carListings.$inferSelect; score: typeof carScores.$inferSelect | null }) => {
       let carfax = null;
       if (row.listing.vin) {
         const [cf] = await db.select().from(carfaxReports).where(eq(carfaxReports.vin, row.listing.vin)).limit(1);
@@ -88,6 +88,14 @@ function getSortColumn(sortBy: string) {
   }
 }
 
+function normalizeListingUrl(url: string | null): string | null {
+  if (!url) return url;
+  // Old CarGurus detail path (/Cars/l-<id>) 404s; canonical form is /Cars/link/<id>
+  const m = url.match(/cargurus\.com\/Cars\/l-(\d+)/);
+  if (m) return `https://www.cargurus.com/Cars/link/${m[1]}`;
+  return url;
+}
+
 function mapListing(row: any) {
   return {
     id: row.id, sourceId: row.sourceId, externalId: row.externalId, vin: row.vin,
@@ -99,7 +107,7 @@ function mapListing(row: any) {
     fuelType: row.fuelType, mpgCity: row.mpgCity ? Number(row.mpgCity) : null,
     mpgHighway: row.mpgHighway ? Number(row.mpgHighway) : null,
     dealerName: row.dealerName, dealerCity: row.dealerCity, dealerState: row.dealerState,
-    dealerZip: row.dealerZip, listingUrl: row.listingUrl, imageUrl: row.imageUrl,
+    dealerZip: row.dealerZip, listingUrl: normalizeListingUrl(row.listingUrl), imageUrl: row.imageUrl,
     daysOnMarket: row.daysOnMarket, scrapedAt: row.scrapedAt, isActive: row.isActive,
   };
 }
@@ -171,6 +179,7 @@ export async function upsertListing(scraped: any, sourceId: number) {
       titleStatus: scraped.titleStatus, dealerName: scraped.dealerName,
       dealerCity: scraped.dealerCity, dealerState: scraped.dealerState,
       dealerZip: scraped.dealerZip, imageUrl: scraped.imageUrl, daysOnMarket: scraped.daysOnMarket,
+      listingUrl: scraped.listingUrl,
     }).where(eq(carListings.id, existing[0].id));
     saveDb();
     return existing[0].id;

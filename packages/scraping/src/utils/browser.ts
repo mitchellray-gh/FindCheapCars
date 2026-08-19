@@ -76,7 +76,7 @@ export async function createStealthContext(): Promise<BrowserContext> {
     (window.navigator.permissions as any).query = (parameters: { name: string }) =>
       parameters.name === 'notifications'
         ? Promise.resolve({ state: Notification.permission } as PermissionStatus)
-        : originalQuery(parameters);
+        : originalQuery(parameters as PermissionDescriptor);
 
     // Chrome runtime
     Object.defineProperty(window, 'chrome', {

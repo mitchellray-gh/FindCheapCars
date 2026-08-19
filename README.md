@@ -116,6 +116,11 @@ curl -X POST http://localhost:3000/api/scrape \
   -H "Content-Type: application/json" \
   -d '{"source":"cargurus","zipCode":"60601","maxPages":10,"maxPrice":15000}'
 
+# All sources at once (cargurus + cars.com + autotrader)
+curl -X POST http://localhost:3000/api/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"source":"all","zipCode":"60601","maxPages":5,"maxPrice":15000}'
+
 # Multiple zip codes for more results
 curl -X POST http://localhost:3000/api/scrape -H "Content-Type: application/json" \
   -d '{"source":"cargurus","zipCode":"10001","maxPages":10,"maxPrice":15000}'
