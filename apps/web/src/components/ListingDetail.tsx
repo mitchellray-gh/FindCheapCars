@@ -83,6 +83,45 @@ function StatItem({ label, value }: { label: string; value?: string | number | n
   );
 }
 
+function wikiSearchUrl(query: string): string {
+  // Special:Search redirects straight to the article on an exact title match,
+  // otherwise lands on Wikipedia's search results — reliable for any term.
+  return `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`;
+}
+
+function WikiStatItem({
+  label,
+  value,
+  query,
+}: {
+  label: string;
+  value?: string | number | null;
+  query?: string | null;
+}) {
+  const hasValue = value !== undefined && value !== null && value !== '';
+  return (
+    <div className="flex flex-col">
+      <span className="text-xs text-slate-500 uppercase tracking-wider">{label}</span>
+      {hasValue && query ? (
+        <a
+          href={wikiSearchUrl(query)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-400 hover:text-blue-300 font-medium mt-0.5 inline-flex items-center gap-1 group"
+          title={`Look up "${value}" on Wikipedia`}
+        >
+          {value}
+          <svg className="w-3 h-3 opacity-60 group-hover:opacity-100 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </a>
+      ) : (
+        <span className="text-sm text-slate-200 font-medium mt-0.5">{value ?? '—'}</span>
+      )}
+    </div>
+  );
+}
+
 export default function ListingDetail({ listing }: ListingDetailProps) {
   const title = `${listing.year} ${listing.make} ${listing.model}${listing.trim ? ` ${listing.trim}` : ''}`;
 
@@ -172,9 +211,26 @@ export default function ListingDetail({ listing }: ListingDetailProps) {
               <StatItem label="Mileage" value={listing.mileage?.toLocaleString() ? `${listing.mileage.toLocaleString()} mi` : undefined} />
               <StatItem label="VIN" value={listing.vin} />
               <StatItem label="Title" value={listing.titleStatus} />
-              <StatItem label="Transmission" value={listing.transmission} />
+              <WikiStatItem
+                label="Manufacturer"
+                value={listing.make}
+                query={listing.make ? `${listing.make} (automobile manufacturer)` : null}
+              />
+              <WikiStatItem
+                label="Transmission"
+                value={listing.transmission}
+                query={listing.transmission ? `${listing.transmission} transmission` : null}
+              />
               <StatItem label="Drivetrain" value={listing.drivetrain} />
-              <StatItem label="Engine" value={listing.engine} />
+              <WikiStatItem
+                label="Engine"
+                value={listing.engine}
+                query={
+                  listing.engine
+                    ? `${listing.make ? `${listing.make} ` : ''}${listing.engine} engine`
+                    : null
+                }
+              />
               <StatItem label="MPG City" value={listing.mpgCity} />
               <StatItem label="MPG Hwy" value={listing.mpgHighway} />
               <StatItem label="Body" value={listing.bodyStyle} />
