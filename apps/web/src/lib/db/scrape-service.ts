@@ -1,7 +1,7 @@
 import { getDb, saveDb } from './client';
 import { sources, carListings, carScores, carfaxReports, reliabilityRatings, scrapeLogs } from './schema';
 import { eq, and } from 'drizzle-orm';
-import { CarGurusScraper, CarsComScraper, AutotraderScraper, CarMaxScraper, decodeVin } from '@auto-find/scraping';
+import { CarGurusScraper, CarsComScraper, AutotraderScraper, CarMaxScraper, decodeVin, buildEngineFromVin, buildTransmissionFromVin } from '@auto-find/scraping';
 import { computeReliabilityScore } from '../scoring/reliability';
 import { computeValueScore } from '../scoring/value';
 import { computeCompositeScore } from '../scoring/index';
@@ -64,6 +64,28 @@ export async function runScrapeJob(config: {
       const totalCost = scraped.price + (scraped.estimatedFees || 0);
       if (totalCost > 15000) continue;
 
+      // Decode VIN up front so we can enrich missing engine/transmission specs
+      // (many source listings omit them) before saving the listing.
+      let decoded: Awaited<ReturnType<typeof decodeVin>> | null = null;
+      if (scraped.vin && scraped.vin.length === 17) {
+        try {
+          decoded = await decodeVin(scraped.vin);
+        } catch { /* NHTSA unavailable — continue without enrichment */ }
+      }
+
+      if (decoded) {
+        if (!scraped.engine) {
+          const eng = buildEngineFromVin(decoded);
+          if (eng) scraped.engine = eng;
+        }
+        if (!scraped.transmission) {
+          const trans = buildTransmissionFromVin(decoded);
+          if (trans) scraped.transmission = trans;
+        }
+        if (!scraped.drivetrain && decoded.driveType) scraped.drivetrain = decoded.driveType;
+        if (!scraped.fuelType && decoded.fuelTypePrimary) scraped.fuelType = decoded.fuelTypePrimary;
+      }
+
       const existingListing = await db.select({ id: carListings.id }).from(carListings)
         .where(and(eq(carListings.sourceId, source.id), eq(carListings.externalId, scraped.externalId))).limit(1);
 
@@ -71,11 +93,10 @@ export async function runScrapeJob(config: {
       if (existingListing.length > 0) updatedCount++;
       else newCount++;
 
-      if (scraped.vin && scraped.vin.length === 17) {
+      if (decoded && scraped.vin && scraped.vin.length === 17) {
         const existingCarfax = await db.select().from(carfaxReports).where(eq(carfaxReports.vin, scraped.vin)).limit(1);
         if (existingCarfax.length === 0) {
           try {
-            const decoded = await decodeVin(scraped.vin);
             await db.insert(carfaxReports).values({
               vin: scraped.vin, numOwners: null, accidentCount: 0,
               serviceRecords: JSON.stringify([]), serviceRecordsCount: 0,

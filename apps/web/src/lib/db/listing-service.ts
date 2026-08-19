@@ -180,6 +180,8 @@ export async function upsertListing(scraped: any, sourceId: number) {
       dealerCity: scraped.dealerCity, dealerState: scraped.dealerState,
       dealerZip: scraped.dealerZip, imageUrl: scraped.imageUrl, daysOnMarket: scraped.daysOnMarket,
       listingUrl: scraped.listingUrl,
+      transmission: scraped.transmission, engine: scraped.engine,
+      drivetrain: scraped.drivetrain, fuelType: scraped.fuelType,
     }).where(eq(carListings.id, existing[0].id));
     saveDb();
     return existing[0].id;

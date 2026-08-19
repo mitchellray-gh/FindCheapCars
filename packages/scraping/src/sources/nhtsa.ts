@@ -41,8 +41,10 @@ export async function decodeVin(vin: string): Promise<NhtsaDecodedVin> {
     bodyClass: String(result.BodyClass ?? ''),
     displacementL: String(result.DisplacementL ?? ''),
     engineCylinders: String(result.EngineCylinders ?? ''),
+    engineModel: String(result.EngineModel ?? ''),
     fuelTypePrimary: String(result.FuelTypePrimary ?? ''),
     transmissionStyle: String(result.TransmissionStyle ?? ''),
+    transmissionSpeeds: String(result.TransmissionSpeeds ?? ''),
     driveType: String(result.DriveType ?? ''),
     manufacturerId: String(result.ManufacturerId ?? ''),
     plantCity: String(result.PlantCity ?? ''),
@@ -101,4 +103,30 @@ export async function getRecalls(
   recallCache.set(cacheKey, recalls);
 
   return recalls;
+}
+
+/** Build a human-readable engine string from decoded VIN data, e.g. "2.4L 4-Cyl (K24Z1)". */
+export function buildEngineFromVin(decoded: NhtsaDecodedVin): string | null {
+  const disp = decoded.displacementL ? parseFloat(decoded.displacementL) : NaN;
+  const parts: string[] = [];
+  if (!Number.isNaN(disp) && disp > 0) parts.push(`${disp.toFixed(1)}L`);
+  if (decoded.engineCylinders) parts.push(`${decoded.engineCylinders}-Cyl`);
+  if (decoded.fuelTypePrimary && !/gasoline/i.test(decoded.fuelTypePrimary)) {
+    parts.push(decoded.fuelTypePrimary.replace(/\s*\(.*?\)\s*/g, '').trim());
+  }
+  let engine = parts.join(' ');
+  const model = decoded.engineModel?.trim();
+  if (engine && model) engine += ` (${model})`;
+  else if (!engine && model) engine = model;
+  return engine || null;
+}
+
+/** Build a human-readable transmission string, e.g. "5-Speed Automatic" or "CVT". */
+export function buildTransmissionFromVin(decoded: NhtsaDecodedVin): string | null {
+  const style = decoded.transmissionStyle?.trim();
+  if (!style) return null;
+  if (/continuously variable/i.test(style)) return 'CVT (Continuously Variable)';
+  const speeds = decoded.transmissionSpeeds ? parseInt(decoded.transmissionSpeeds, 10) : NaN;
+  if (!Number.isNaN(speeds) && speeds > 0) return `${speeds}-Speed ${style}`;
+  return style;
 }

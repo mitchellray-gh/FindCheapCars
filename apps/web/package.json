@@ -6,7 +6,8 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
-    "seed": "tsx src/lib/db/seed.ts"
+    "seed": "tsx src/lib/db/seed.ts",
+    "enrich": "tsx src/lib/db/enrich.ts"
   },
   "dependencies": {
     "@auto-find/scraping": "*",

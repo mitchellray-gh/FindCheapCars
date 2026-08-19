@@ -19,8 +19,10 @@ export interface NhtsaDecodedVin {
   bodyClass: string;
   displacementL: string;
   engineCylinders: string;
+  engineModel: string;
   fuelTypePrimary: string;
   transmissionStyle: string;
+  transmissionSpeeds: string;
   driveType: string;
   manufacturerId: string;
   plantCity: string;
