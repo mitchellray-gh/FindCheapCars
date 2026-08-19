@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import ScoreBadge from './ScoreBadge';
+import VehicleGraphic from './VehicleGraphic';
 
 interface ListingScore {
   compositeScore: number;
@@ -20,7 +21,7 @@ interface ListingRow {
   mileage?: number;
   dealerCity?: string;
   dealerState?: string;
-  imageUrl?: string;
+  exteriorColor?: string;
   bodyStyle?: string;
   drivetrain?: string;
   transmission?: string;
@@ -84,21 +85,13 @@ function ListingCard({ row }: { row: ListingRow }) {
       onClick={() => router.push(`/listing/${row.id}`)}
       className="card group text-left overflow-hidden flex flex-col transition-all duration-200 hover:border-blue-500/60 hover:shadow-blue-500/10 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
     >
-      {/* Image */}
-      <div className="relative h-44 bg-slate-800 overflow-hidden">
-        {row.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={row.imageUrl}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <CarIcon className="w-12 h-12 text-slate-600" />
-          </div>
-        )}
+      {/* Body-style graphic (tinted by color) */}
+      <div className="relative h-44 overflow-hidden">
+        <VehicleGraphic
+          bodyStyle={row.bodyStyle}
+          color={row.exteriorColor}
+          className="h-full w-full"
+        />
         {row.score && (
           <div className="absolute top-2 right-2">
             <ScoreBadge score={row.score.compositeScore} tier={tierLabel[row.score.tier] || row.score.tier} size="sm" />

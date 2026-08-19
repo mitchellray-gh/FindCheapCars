@@ -1,6 +1,7 @@
 'use client';
 
 import ScoreBadge from './ScoreBadge';
+import VehicleGraphic from './VehicleGraphic';
 
 interface ScoreBreakdown {
   base?: number;
@@ -149,24 +150,13 @@ export default function ListingDetail({ listing }: ListingDetailProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column - Image & Key Stats */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Image */}
+          {/* Vehicle graphic (body style + color) */}
           <div className="card overflow-hidden">
-            {listing.imageUrl ? (
-              <img
-                src={listing.imageUrl}
-                alt={title}
-                className="w-full h-64 sm:h-80 object-cover"
-              />
-            ) : (
-              <div className="w-full h-64 sm:h-80 bg-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <svg className="w-16 h-16 text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H18.75m-7.5-2.25h7.5M8.25 6.75h7.5" />
-                  </svg>
-                  <span className="text-slate-500 text-sm">No image available</span>
-                </div>
-              </div>
-            )}
+            <VehicleGraphic
+              bodyStyle={listing.bodyStyle}
+              color={listing.exteriorColor}
+              className="w-full h-64 sm:h-80"
+            />
           </div>
 
           {/* Score Breakdown */}
